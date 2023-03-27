@@ -1,3 +1,4 @@
+import matplotlib
 import numpy as np
 import pandas as pd
 from sys import argv
@@ -5,7 +6,26 @@ import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 from scipy.stats import chi2
 
-show = True
+# plotting stuff
+import seaborn as sns
+# set fig params
+sns.set_context("paper")
+sns.set_style('ticks')
+sns.set_palette('colorblind')
+figparams = {
+    'text.latex.preamble': r'\usepackage{amsmath} \boldmath',
+    'text.usetex': True,
+    'axes.labelsize': 16.,
+    'xtick.labelsize': 10,
+    'ytick.labelsize': 10,
+    'figure.figsize': [10., 8.],
+    'font.family': 'DejaVu Sans',
+    'legend.fontsize': 18}
+plt.rcParams.update(figparams)
+cs = plt.rcParams['axes.prop_cycle'].by_key()['color']
+matplotlib.use('Agg')
+
+
 sdss_pairwise_curves_fname = "covariances/sdss_g_sqrtg.csv"
 sdss_cov_g_fname = "covariances/covariances_sdss_g.txt"
 sdss_cov_sqrtg_fname = "covariances/covariances_sdss_sqrt_g.txt"
@@ -36,13 +56,14 @@ p_pw = df_pw_obs_curve.ksz_curve.values
 df_cov = pd.read_hdf(obs_fname, 'df_cov')
 C_pw = df_cov.values.astype(float)[first_bin:last_bin, first_bin:last_bin]
 
+
 def combine_covs(scale, C_pw, C_sdss):
     C = C_pw + scale**2 * C_sdss
     return C
 
 
 def chisq(amplitude, r, p_pw, p_sdss, C_pw, C_sdss):
-    '''Receives an amplitude r, p_pw, p_sdss, C_pw, C_sdss and fits 
+    '''Receives an amplitude r, p_pw, p_sdss, C_pw, C_sdss and fits
     an amplitude.
     '''
     delta = (p_pw - p_sdss * amplitude)
@@ -68,6 +89,7 @@ def sample_likelyhood(Nsamples, best_amplitude, max_amp_factor,
                                p_sdss_g_or_sqrt_g, C_pw, C_g_or_sqrtg))
     return amplitude, likelihood/np.max(likelihood)
 
+
 def get_one_sigma(Nsamples_res, best_amplitude, max_amp_factor,
                   rsep, p_pw, p_sdss_g_or_sqrt_g, C_pw,
                   C_g_or_sqrtg):
@@ -82,27 +104,27 @@ def get_one_sigma(Nsamples_res, best_amplitude, max_amp_factor,
 fitted_g = get_max_lik_fit(rsep, p_pw, p_sdss_g, C_pw, C_g)
 fitted_sqrt = get_max_lik_fit(rsep, p_pw, p_sdss_sqrt_g, C_pw, C_sqrt_g)
 
-fitted_g_chisq = chisq(fitted_g, rsep, 
+fitted_g_chisq = chisq(fitted_g, rsep,
                        p_pw, p_sdss_g, C_pw, C_g)
 fitted_sqrt_g = chisq(fitted_sqrt, rsep,
-                           p_pw, p_sdss_sqrt_g, C_pw, C_sqrt_g)
+                      p_pw, p_sdss_sqrt_g, C_pw, C_sqrt_g)
 
 sigma_g = get_one_sigma(10000, fitted_g, 5, rsep, p_pw, p_sdss_g, C_pw, C_g)
 sigma_sqrt_g = get_one_sigma(10000, fitted_sqrt, 5, rsep, p_pw,
                              p_sdss_sqrt_g, C_pw, C_sqrt_g)
 
 plt.subplots(constrained_layout=True, figsize=[5, 3])
-#plt.figure(figsize=[5,3])
-plt.rcParams.update({'font.size':12})
+# plt.figure(figsize=[5,3])
+plt.rcParams.update({'font.size': 12})
 
 plt.errorbar(rsep, p_pw,
              yerr=np.sqrt(np.diag(C_pw)),
-             marker='o', ls='', color='C0',
-             label='pairwise SZ')
-#plt.scatter(rsep, p_sdss_g * fitted_g,
+             marker='o', ls='', color='black',
+             label=r'$\mathrm{Measured~Pairwise~SZ}$')
+# plt.scatter(rsep, p_sdss_g * fitted_g,
 #            marker='o', color='C1',
 #            label='sdss $g$')
-#plt.scatter(rsep, p_sdss_sqrt_g * fitted_sqrt, 
+# plt.scatter(rsep, p_sdss_sqrt_g * fitted_sqrt,
 #            marker='o', color='C2',
 #            label='sdss $\\sqrt{g}$')
 dof = len(rsep)
@@ -111,27 +133,26 @@ pte_g = 1 - rv.cdf(fitted_g_chisq)
 pte_sqrt_g = 1 - rv.cdf(fitted_sqrt_g)
 
 plt.fill_between(rsep,
-                 y1 = p_sdss_g * (fitted_g + sigma_g),
-                 y2 = p_sdss_g * (fitted_g - sigma_g), 
-                 color='C1', alpha=0.2,
-                 label='$g$, $\\chi^2=$%1.2f, PTE=%1.2f' % (fitted_g_chisq,
-                                                            pte_g))
-plt.plot(rsep, p_sdss_g * fitted_g, color='C1')
+                 y1=p_sdss_g * (fitted_g + sigma_g),
+                 y2=p_sdss_g * (fitted_g - sigma_g),
+                 color=cs[0], alpha=0.2,
+                 label=r'$\Lambda \mathrm{CDM}$')
+
+#  label='$g$, $\\chi^2=$%1.2f, PTE=%1.2f' % (fitted_g_chisq,
+# pte_g))
+plt.plot(rsep, p_sdss_g * fitted_g, color=cs[0])
 
 plt.fill_between(rsep,
-                 y1 = p_sdss_sqrt_g * (fitted_sqrt + sigma_sqrt_g),
-                 y2 = p_sdss_sqrt_g * (fitted_sqrt - sigma_sqrt_g),
-                 color='C2', alpha=0.2,
-                 label='$\\sqrt{g}$ (MOND), $\\chi^2$=%1.2f, PTE=%1.2f' % (fitted_sqrt_g,
-                                                                pte_sqrt_g))
+                 y1=p_sdss_sqrt_g * (fitted_sqrt + sigma_sqrt_g),
+                 y2=p_sdss_sqrt_g * (fitted_sqrt - sigma_sqrt_g),
+                 color=cs[1], alpha=0.2,
+                 label=r'$\mathrm{MOND}$')
+
+# label='$\\sqrt{g}$ (MOND), $\\chi^2$=%1.2f, PTE=%1.2f' % (fitted_sqrt_g, pte_sqrt_g))
 plt.plot(rsep, p_sdss_sqrt_g * fitted_sqrt,
-         color='C2')
+         color=cs[1])
 plt.legend(fontsize=8)
 plt.axhline(0, color='black')
-plt.xlabel('r [Mpc]')
-plt.ylabel('$\\hat p_{kSZ}$ [$\\rm {\\mu K}$]')
-if show:
-    plt.show()
-else:
-    plt.savefig('%s_uncertainty_bands.pdf' % obs_name)
-    plt.close()
+plt.xlabel(r'$r~[\mathrm{Mpc}]$')
+plt.ylabel(r'$\hat{p}_{kSZ}~[\mathrm{\mu K}]$')
+plt.savefig('plots/pksz.pdf')
