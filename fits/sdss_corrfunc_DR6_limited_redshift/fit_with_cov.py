@@ -151,6 +151,28 @@ plt.fill_between(rsep,
 # label='$\\sqrt{g}$ (MOND), $\\chi^2$=%1.2f, PTE=%1.2f' % (fitted_sqrt_g, pte_sqrt_g))
 plt.plot(rsep, p_sdss_sqrt_g * fitted_sqrt,
          color=cs[1])
+
+# plot C21 data
+firstbin = 2
+fname = 'C21_data/L43_S18_ksz_vij_iz1.dat'
+tau = 0.54e-4
+d_tau = 0.12e-4
+T_cmb_over_c = 2.726e6/3e5
+df = pd.read_csv(fname, delim_whitespace=True,
+                     names=['id1', 'id2', 'r', 'p'])
+r = df.r.values[firstbin:]
+p = df.p.values[firstbin:]
+plt.plot(r, -p * T_cmb_over_c * tau,
+         ls='--', label=fname, color='black')
+plt.xlim([0, 260])
+
+#plt.fill_between(r,
+#                 y1= -p * T_cmb_over_c * (tau + d_tau),
+#                 y2= -p * T_cmb_over_c * (tau - d_tau),
+#                 color='black', alpha=0.2)
+
+# end plot C21 data
+
 plt.legend(fontsize=8)
 plt.axhline(0, color='black')
 plt.xlabel(r'$r~[\mathrm{Mpc}]$')
