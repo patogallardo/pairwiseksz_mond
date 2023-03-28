@@ -11,24 +11,27 @@ from scipy.integrate import quad
 import matplotlib.pyplot as plt
 from scipy.stats import chi2
 from scipy import optimize
-plt.rcParams.update({'font.size':13})
+plt.rcParams.update({'font.size': 13})
 
 show = False
 
 first_bin, last_bin = 2, 17
 show = False
-h = 0.6736 # planck PR3 2018
+h = 0.6736  # planck PR3 2018
 
 zbin = 2
 bincent = 0
 obs_name = "L43_150"
+
 
 def xi_r_sq(r, xi_interp):
     r_sq = r**2
     return (xi_interp(r)) * r_sq
 
 # chisq(amp, exp, rsep, df_curve.ksz_curve.values,
-                                # amp_exponent_function_tofit, C_pw)
+    # amp_exponent_function_tofit, C_pw)
+
+
 def get_max_lik_fit(r, p, cov, amp_exponent_function_tofit):
     '''Received observed r, p inv_cov and a function to fit, fits the amplitude
     and returns it.'''
@@ -41,7 +44,8 @@ def get_max_lik_fit(r, p, cov, amp_exponent_function_tofit):
     return res
 
 
-corr_fun_fname = "Ross_2016_COMBINEDDR12_zbin%i_correlation_function_monopole_post_recon_bincent%i.dat" % (zbin, bincent)
+corr_fun_fname = "Ross_2016_COMBINEDDR12_zbin%i_correlation_function_monopole_post_recon_bincent%i.dat" % (
+    zbin, bincent)
 corr_fun_dir = "Ross_2016_COMBINEDDR12"
 obsdir_150 = './DR6_res/'
 obsdir_090 = './DR6_res/'
@@ -73,19 +77,21 @@ for j in range(len(r)):
 
 # interpolate g
 pow_g = interp1d(r, np.power(I/r**2, 0.5),
-                kind='cubic',
-                bounds_error=False,
-                fill_value='extrapolate')
+                 kind='cubic',
+                 bounds_error=False,
+                 fill_value='extrapolate')
 # end interpolation
 
 rsep = df_curve.r_mp.values
+
+
 def amp_exponent_function_tofit(amplitude, exponent,
                                 rsep, I):
     f_pow_g = interp1d(r, np.power(I/r**2, exponent),
-                                   kind='cubic',
-                                   bounds_error=False,
-                                   fill_value='extrapolate')
-    g_exp_power_times_A = -1.0* amplitude * f_pow_g(rsep)
+                       kind='cubic',
+                       bounds_error=False,
+                       fill_value='extrapolate')
+    g_exp_power_times_A = -1.0 * amplitude * f_pow_g(rsep)
     return g_exp_power_times_A
 
 
@@ -112,7 +118,6 @@ def chisq(amp_exp,
     return chisq_toreturn
 
 
-
 # Plot contours
 N_samples = 200
 amp_range = [0.0, 0.04]
@@ -124,7 +129,8 @@ exps = np.linspace(exp_range[0], exp_range[1], N_samples)
 amp_mat, exp_mat = np.meshgrid(amps, exps)
 chisq_mat = np.zeros_like(amp_mat)
 
-res = get_max_lik_fit(rsep, df_curve.ksz_curve.values, C_pw, amp_exponent_function_tofit)
+res = get_max_lik_fit(rsep, df_curve.ksz_curve.values,
+                      C_pw, amp_exponent_function_tofit)
 
 for j in range(len(amps)):
     for k in range(len(exp_mat)):
@@ -158,7 +164,7 @@ plt.errorbar(df_curve.r_mp.values,
              capsize=2)
 plt.axhline(0, color='black', lw=2)
 
-labels = ['n=0.5 (fixit?)', 'n=1 (NG)', 'n=%1.2f (ML)' %res['exp']]
+labels = ['n=0.5 (fixit?)', 'n=1 (NG)', 'n=%1.2f (ML)' % res['exp']]
 for label, amp, exp in zip(labels, [.02, .02, res['amp']], [1, 0.5, res['exp']]):
     plt.plot(rsep, amp_exponent_function_tofit(amp, exp, rsep, I),
              label=label)
@@ -166,5 +172,5 @@ plt.legend(loc='lower right')
 if show:
     plt.show()
 else:
-    plt.savefig('')
+    plt.savefig('plots/2_param_pksz.pdf')
 # end plot curves
