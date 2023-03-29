@@ -3,7 +3,7 @@ Opens data and covs from C21, open correlation function from Ross and integrate 
 
 Then fit.
 '''
-
+import matplotlib
 import pandas as pd
 import numpy as np
 from scipy.interpolate import interp1d
@@ -11,7 +11,26 @@ from scipy.integrate import quad
 import matplotlib.pyplot as plt
 from scipy.stats import chi2
 from scipy import optimize
-plt.rcParams.update({'font.size': 13})
+# plt.rcParams.update({'font.size': 13})
+
+# plotting stuff
+import seaborn as sns
+# set fig params
+sns.set_context("paper")
+sns.set_style('ticks')
+sns.set_palette('colorblind')
+figparams = {
+    'text.latex.preamble': r'\usepackage{amsmath} \boldmath',
+    'text.usetex': True,
+    'axes.labelsize': 16.,
+    'xtick.labelsize': 10,
+    'ytick.labelsize': 10,
+    'figure.figsize': [10., 8.],
+    'font.family': 'DejaVu Sans',
+    'legend.fontsize': 18}
+plt.rcParams.update(figparams)
+cs = plt.rcParams['axes.prop_cycle'].by_key()['color']
+matplotlib.use('Agg')
 
 show = False
 
@@ -145,13 +164,18 @@ Likelihood = Likelihood/Likelihood.max()
 plt.subplots(figsize=[4, 4],
              constrained_layout=True)
 levels = np.exp(-np.arange(3, -1, -1)**2/2)
-plt.contour(amp_mat, exp_mat, Likelihood, levels=levels)
-plt.xlabel('A')
-plt.ylabel('n')
-plt.scatter(res['amp'], res['exp'], label='ML')
-plt.axhline(1, color='black', alpha=0.5)
-plt.axhline(0.5, color='black', alpha=0.5)
-plt.show()
+plt.contour(amp_mat, exp_mat, Likelihood, levels=levels,
+            colors='black')
+plt.xlabel(r'$\mathrm{Amplitude}$')
+plt.ylabel(r'$\mathrm{Force~Law~Index,~}n$')
+plt.scatter(res['amp'], res['exp'], label='ML', color='black', marker='X')
+plt.axhline(1, color=cs[0], alpha=0.5, ls='dashed')
+plt.text(0.032, 1.01, r'$\Lambda\mathrm{CDM}$',
+         color=cs[0])
+plt.axhline(0.5, color=cs[1], alpha=0.5, ls='dashed')
+plt.text(0.032, 0.51, r'$\mathrm{MOND}$',
+         color=cs[1])
+plt.savefig('plots/contour_plot.pdf')
 # End plot contours
 
 
@@ -169,8 +193,5 @@ for label, amp, exp in zip(labels, [.02, .02, res['amp']], [1, 0.5, res['exp']])
     plt.plot(rsep, amp_exponent_function_tofit(amp, exp, rsep, I),
              label=label)
 plt.legend(loc='lower right')
-if show:
-    plt.show()
-else:
-    plt.savefig('plots/2_param_pksz.pdf')
+# plt.savefig('plots/2_param_pksz.pdf')
 # end plot curves
