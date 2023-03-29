@@ -159,22 +159,24 @@ tau = 0.54e-4
 d_tau = 0.12e-4
 T_cmb_over_c = 2.726e6/3e5
 df = pd.read_csv(fname, delim_whitespace=True,
-                     names=['id1', 'id2', 'r', 'p'])
+                 names=['id1', 'id2', 'r', 'p'])
 r = df.r.values[firstbin:]
 p = df.p.values[firstbin:]
 plt.plot(r, -p * T_cmb_over_c * tau,
-         ls='--', label=fname, color='black')
+         ls='--', label=r'$\Lambda\mathrm{CDM~best{-}fit~(Calafut~et~al.~2021)}$', color='black')
 plt.xlim([0, 260])
 
-#plt.fill_between(r,
+# plt.fill_between(r,
 #                 y1= -p * T_cmb_over_c * (tau + d_tau),
 #                 y2= -p * T_cmb_over_c * (tau - d_tau),
 #                 color='black', alpha=0.2)
 
 # end plot C21 data
-
-plt.legend(fontsize=8)
+handles, labels = plt.gca().get_legend_handles_labels()
+order = [1, 2, 3, 0]
+plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order],
+           fontsize=8)
 plt.axhline(0, color='black')
 plt.xlabel(r'$r~[\mathrm{Mpc}]$')
-plt.ylabel(r'$\hat{p}_{kSZ}~[\mathrm{\mu K}]$')
+plt.ylabel(r'$\hat{p}_{\mathrm{kSZ}}~[\mathrm{\mu K}]$')
 plt.savefig('plots/pksz.pdf')
