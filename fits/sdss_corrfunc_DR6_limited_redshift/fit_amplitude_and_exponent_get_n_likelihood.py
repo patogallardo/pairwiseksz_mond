@@ -59,6 +59,7 @@ def get_max_lik_fit(r, p, cov, amp_exponent_function_tofit):
     amp, exp = opt.x[0], opt.x[1]
     res = {'amp': amp,
            'exp': exp}
+    print(res)
     return res
 
 
@@ -202,4 +203,17 @@ th = np.exp(-1/2.)
 plt.plot(exps, L_n)
 plt.axvline(res['exp'])
 plt.axhline(th)
+
+cumsum = np.cumsum(L_n)
+cumsum = cumsum/cumsum.max()
+
+lowerlimit = 0.5-0.68/2
+upperlimit = 0.5+0.68/2
+sel = np.logical_and(cumsum>lowerlimit, cumsum<upperlimit)
+lower_exp = exps[sel][0]
+upper_exp = exps[sel][-1]
+sigma_n = 0.5 * (upper_exp - lower_exp)
+print(sigma_n)
+
+plt.axvspan(xmin=lower_exp, xmax=upper_exp, alpha=0.1)
 plt.show()
