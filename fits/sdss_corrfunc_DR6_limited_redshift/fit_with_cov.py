@@ -132,6 +132,15 @@ rv = chi2(dof)
 pte_g = 1 - rv.cdf(fitted_g_chisq)
 pte_sqrt_g = 1 - rv.cdf(fitted_sqrt_g)
 
+print("degrees of freedom: %i" % dof)
+df_table = pd.DataFrame(data=[[fitted_g_chisq, pte_g],
+                              [fitted_sqrt_g, pte_sqrt_g]],
+                        index=['$\\Lambda \\rm CDM$', 'MOND'],
+                        columns=['$\\chi^2$', 'PTE'])
+df_table.to_latex('table_ptes.tex',
+                  escape=False, 
+                  float_format="%1.2f")
+
 plt.fill_between(rsep,
                  y1=p_sdss_g * (fitted_g + sigma_g),
                  y2=p_sdss_g * (fitted_g - sigma_g),
