@@ -39,7 +39,7 @@ h = 0.6736  # planck PR3 2018
 
 zbin = 2
 bincent = 0
-obs_name = "L43_150"
+obs_name = "L43_150_REST_Z"
 
 
 def xi_r_sq(r, xi_interp):

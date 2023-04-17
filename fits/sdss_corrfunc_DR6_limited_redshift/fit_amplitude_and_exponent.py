@@ -40,7 +40,7 @@ h = 0.6736  # planck PR3 2018
 
 zbin = 2
 bincent = 0
-obs_name = "L43_150"
+obs_name = "L43_150_REST_Z"
 
 
 def xi_r_sq(r, xi_interp):
@@ -138,12 +138,13 @@ def chisq(amp_exp,
 
 
 # Plot contours
-N_samples = 200
+N_samples_exp = 200
+N_samples_amp = 300
 amp_range = [0.0, 0.04]
-exp_range = [0.3, 2.00]
+exp_range = [0.1, 4.00]
 
-amps = np.linspace(amp_range[0], amp_range[1], N_samples)
-exps = np.linspace(exp_range[0], exp_range[1], N_samples)
+amps = np.linspace(amp_range[0], amp_range[1], N_samples_amp)
+exps = np.linspace(exp_range[0], exp_range[1], N_samples_exp)
 
 amp_mat, exp_mat = np.meshgrid(amps, exps)
 chisq_mat = np.zeros_like(amp_mat)
@@ -152,15 +153,15 @@ res = get_max_lik_fit(rsep, df_curve.ksz_curve.values,
                       C_pw, amp_exponent_function_tofit)
 
 for j in range(len(amps)):
-    for k in range(len(exp_mat)):
-        amp, exp = amp_mat[j, k], exp_mat[j, k]
+    for k in range(len(exps)):
+        amp, exp = amp_mat[k, j], exp_mat[k, j]
         amp_exp = [amp, exp]
-        chisq_mat[j, k] = chisq(amp_exp, rsep, df_curve.ksz_curve.values,
+        chisq_mat[k, j] = chisq(amp_exp, rsep, df_curve.ksz_curve.values,
                                 amp_exponent_function_tofit, C_pw)
 Likelihood = np.exp(-chisq_mat/2)
 Likelihood = Likelihood/Likelihood.max()
 
-
+########### Make n-amp plot ####################
 plt.subplots(figsize=[4, 4],
              constrained_layout=True)
 levels = np.exp(-np.arange(3, -1, -1)**2/2)
@@ -175,9 +176,10 @@ plt.text(0.032, 1.01, r'$\Lambda\mathrm{CDM}$',
 plt.axhline(0.5, color=cs[1], alpha=0.5, ls='dashed')
 plt.text(0.032, 0.51, r'$\mathrm{MOND}$',
          color=cs[1])
+plt.xlim([0, 0.04])
+plt.ylim([0.25, 2.2])
 plt.savefig('plots/contour_plot.pdf')
-# End plot contours
-
+#################### End n-amp plot
 
 # plot curves
 plt.subplots(figsize=[5, 3], constrained_layout=True)
@@ -188,10 +190,38 @@ plt.errorbar(df_curve.r_mp.values,
              capsize=2)
 plt.axhline(0, color='black', lw=2)
 
-labels = ['n=0.5 (fixit?)', 'n=1 (NG)', 'n=%1.2f (ML)' % res['exp']]
+labels = ['n=0.5', 'n=1', 'n=%1.2f (ML)' % res['exp']]
 for label, amp, exp in zip(labels, [.02, .02, res['amp']], [1, 0.5, res['exp']]):
     plt.plot(rsep, amp_exponent_function_tofit(amp, exp, rsep, I),
              label=label)
 plt.legend(loc='lower right')
 # plt.savefig('plots/2_param_pksz.pdf')
 # end plot curves
+
+####### Now compute uncertainty in n #######
+
+L_n = Likelihood.sum(axis=1)
+L_n = L_n/L_n.max()
+th = np.exp(-1/2.)
+plt.figure()
+plt.plot(exps, L_n)
+plt.axvline(res['exp'])
+plt.axhline(th)
+
+cumsum = np.cumsum(L_n)
+cumsum = cumsum/cumsum.max()
+
+lowerlimit = 0.5-0.68/2
+upperlimit = 0.5+0.68/2
+sel = np.logical_and(cumsum>lowerlimit, cumsum<upperlimit)
+lower_exp = exps[sel][0]
+upper_exp = exps[sel][-1]
+sigma_n = 0.5 * (upper_exp - lower_exp)
+print("Best fit n: %1.3f" % res['exp'])
+print("sigma_n=%1.3f" % sigma_n)
+dist = (res['exp'] - 0.5)/sigma_n
+print("(n_ML-0.5)/sigma= %1.3f" % dist)
+
+plt.axvspan(xmin=lower_exp, xmax=upper_exp, alpha=0.1)
+plt.xlim([0, 2])
+plt.savefig('plots/1d_likelihood.pdf')

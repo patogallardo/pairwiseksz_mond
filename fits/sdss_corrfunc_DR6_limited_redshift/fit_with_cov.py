@@ -30,8 +30,7 @@ sdss_pairwise_curves_fname = "covariances/sdss_g_sqrtg.csv"
 sdss_cov_g_fname = "covariances/covariances_sdss_g.txt"
 sdss_cov_sqrtg_fname = "covariances/covariances_sdss_sqrt_g.txt"
 
-print("Usage example: .py L61_150")
-obs_name = argv[1]
+obs_name = "L43_150_REST_Z"
 print("Using %s" % obs_name)
 first_bin, last_bin = 2, 17
 
