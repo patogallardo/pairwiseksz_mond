@@ -1,7 +1,8 @@
 '''
-Opens data and covs from C21, open correlation function from Ross and integrate it.
+Plot likelihood function and show 
+force law indices.
 
-Then fit.
+P. Gallardo, K. Pardo.
 '''
 import matplotlib
 import pandas as pd
@@ -11,9 +12,8 @@ from scipy.integrate import quad
 import matplotlib.pyplot as plt
 from scipy.stats import chi2
 from scipy import optimize
-# plt.rcParams.update({'font.size': 13})
 
-# plotting stuff
+# Config plot
 import seaborn as sns
 # set fig params
 sns.set_context("paper")
@@ -31,8 +31,8 @@ figparams = {
 plt.rcParams.update(figparams)
 cs = plt.rcParams['axes.prop_cycle'].by_key()['color']
 matplotlib.use('Agg')
-
 show = False
+# End plot config
 
 first_bin, last_bin = 2, 17
 show = False
@@ -47,10 +47,6 @@ def xi_r_sq(r, xi_interp):
     r_sq = r**2
     return (xi_interp(r)) * r_sq
 
-# chisq(amp, exp, rsep, df_curve.ksz_curve.values,
-    # amp_exponent_function_tofit, C_pw)
-
-
 def get_max_lik_fit(r, p, cov, amp_exponent_function_tofit):
     '''Received observed r, p inv_cov and a function to fit, fits the amplitude
     and returns it.'''
@@ -62,19 +58,15 @@ def get_max_lik_fit(r, p, cov, amp_exponent_function_tofit):
            'exp': exp}
     return res
 
-
+# Filename config
 corr_fun_fname = "Ross_2016_COMBINEDDR12_zbin%i_correlation_function_monopole_post_recon_bincent%i.dat" % (
     zbin, bincent)
 corr_fun_dir = "Ross_2016_COMBINEDDR12"
 obsdir_150 = './DR6_res/'
 obsdir_090 = './DR6_res/'
-obs_fnames = {"L61_150": obsdir_150 + "DR6_150GHz_C21cat_lum_gt_6p1e10.hdf",
-              "L43_150": obsdir_150 + "DR6_150GHz_C21cat_lum_gt_4p3e10.hdf",
-              "L61_090": obsdir_090 + "DR6_090GHz_C21cat_lum_gt_6p1e10.hdf",
-              "L43_090": obsdir_090 + "DR6_090GHz_C21cat_lum_gt_4p3e10.hdf",
-              "L43_150_REST_Z": obsdir_150 + "DR6_150GHz_C21cat_lum_gt_4p3e10_and_zgt0p44_and_zlt0p66.hdf"}
+obs_fnames = {"L43_150_REST_Z": obsdir_150 + "DR6_150GHz_C21cat_lum_gt_4p3e10_and_zgt0p44_and_zlt0p66.hdf"}
 obs_fname = obs_fnames[obs_name]
-
+# end filename config
 
 # open data
 df_corr_fun = pd.read_csv(corr_fun_dir + '/' + corr_fun_fname, delim_whitespace=True, skiprows=3,
@@ -181,32 +173,10 @@ plt.ylim([0.25, 2.2])
 plt.savefig('plots/contour_plot.pdf')
 #################### End n-amp plot
 
-# plot curves
-plt.subplots(figsize=[5, 3], constrained_layout=True)
-plt.errorbar(df_curve.r_mp.values,
-             df_curve.ksz_curve.values,
-             yerr=df_curve.errorbar.values,
-             ls='', marker='o',
-             capsize=2)
-plt.axhline(0, color='black', lw=2)
-
-labels = ['n=0.5', 'n=1', 'n=%1.2f (ML)' % res['exp']]
-for label, amp, exp in zip(labels, [.02, .02, res['amp']], [1, 0.5, res['exp']]):
-    plt.plot(rsep, amp_exponent_function_tofit(amp, exp, rsep, I),
-             label=label)
-plt.legend(loc='lower right')
-# plt.savefig('plots/2_param_pksz.pdf')
-# end plot curves
-
 ####### Now compute uncertainty in n #######
 
 L_n = Likelihood.sum(axis=1)
 L_n = L_n/L_n.max()
-th = np.exp(-1/2.)
-plt.figure()
-plt.plot(exps, L_n)
-plt.axvline(res['exp'])
-plt.axhline(th)
 
 cumsum = np.cumsum(L_n)
 cumsum = cumsum/cumsum.max()
@@ -221,7 +191,3 @@ print("Best fit n: %1.3f" % res['exp'])
 print("sigma_n=%1.3f" % sigma_n)
 dist = (res['exp'] - 0.5)/sigma_n
 print("(n_ML-0.5)/sigma= %1.3f" % dist)
-
-plt.axvspan(xmin=lower_exp, xmax=upper_exp, alpha=0.1)
-plt.xlim([0, 2])
-plt.savefig('plots/1d_likelihood.pdf')
