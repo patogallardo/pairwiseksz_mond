@@ -12,6 +12,7 @@ from sys import argv
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 from scipy.stats import chi2
+from matplotlib.ticker import MultipleLocator
 
 # Plot formatting
 import seaborn as sns
@@ -132,7 +133,7 @@ df_table.to_latex('table_ptes.tex',
 # End PTE computation
 
 # Make plot
-plt.subplots(constrained_layout=True, figsize=[5, 3])
+f, ax = plt.subplots(constrained_layout=True, figsize=[5, 3])
 plt.rcParams.update({'font.size': 12})
 
 plt.errorbar(rsep, p_pw,
@@ -171,8 +172,10 @@ plt.plot(r, -p * T_cmb_over_c * tau,
          ls='--', label=r'$\Lambda\mathrm{CDM~best{-}fit~(Calafut~et~al.~2021)}$', color='black')
 plt.xlim([0, 250])
 
+ax.xaxis.set_minor_locator(MultipleLocator(10))
+ax.yaxis.set_minor_locator(MultipleLocator(0.005))
 handles, labels = plt.gca().get_legend_handles_labels()
-order = [0, 1, 2, 3]
+order = [3, 1, 2, 0]
 plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order],
            fontsize=8)
 plt.axhline(0, color='black')
