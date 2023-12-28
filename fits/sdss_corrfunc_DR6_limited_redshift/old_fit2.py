@@ -138,15 +138,14 @@ exp_range = [0.1, 4.00]
 amps = np.linspace(amp_range[0], amp_range[1], N_samples_amp)
 exps = np.linspace(exp_range[0], exp_range[1], N_samples_exp)
 
-# need to swap the coords
-exp_mat, amp_mat = np.meshgrid(exps, amps)
+amp_mat, exp_mat = np.meshgrid(amps, exps)
 chisq_mat = np.zeros_like(amp_mat)
 
 res = get_max_lik_fit(rsep, df_curve.ksz_curve.values,
                       C_pw, amp_exponent_function_tofit)
 
-for j in range(len(exps)):
-    for k in range(len(amps)):
+for j in range(len(amps)):
+    for k in range(len(exps)):
         amp, exp = amp_mat[k, j], exp_mat[k, j]
         amp_exp = [amp, exp]
         chisq_mat[k, j] = chisq(amp_exp, rsep, df_curve.ksz_curve.values,
@@ -155,34 +154,28 @@ Likelihood = np.exp(-chisq_mat/2)
 Likelihood = Likelihood/Likelihood.max()
 
 ########### Make n-amp plot ####################
-amplitude_normalization = 0.0216
-plt.subplots(figsize=[4.0, 4.0],
+plt.subplots(figsize=[4, 4],
              constrained_layout=True)
 levels = np.exp(-np.arange(3, -1, -1)**2/2)
-plt.contour(exp_mat, amp_mat/amplitude_normalization, Likelihood,
-            levels=levels,
+plt.contour(amp_mat, exp_mat, Likelihood, levels=levels,
             colors='black')
-plt.ylabel(r'$\mathrm{ \tau/\tau_{\Lambda CDM}}$')
-plt.xlabel(r'$\mathrm{Force~Law~Index,~}n$')
-plt.scatter(res['exp'], res['amp']/amplitude_normalization,
-            label='ML', color='black', marker='X')
-plt.axvline(1, color=cs[0], alpha=0.5, ls='dashed')
-plt.text(1.01, 0.03,
-         r'$\Lambda\mathrm{CDM}$',
+plt.xlabel(r'$\mathrm{Amplitude}$')
+plt.ylabel(r'$\mathrm{Force~Law~Index,~}n$')
+plt.scatter(res['amp'], res['exp'], label='ML', color='black', marker='X')
+plt.axhline(1, color=cs[0], alpha=0.5, ls='dashed')
+plt.text(0.032, 1.01, r'$\Lambda\mathrm{CDM}$',
          color=cs[0])
-plt.axvline(0.5, color=cs[1], alpha=0.5, ls='dashed')
-plt.text(0.52, 0.03,
-         r'$\mathrm{MOND}$',
+plt.axhline(0.5, color=cs[1], alpha=0.5, ls='dashed')
+plt.text(0.032, 0.51, r'$\mathrm{MOND}$',
          color=cs[1])
-plt.ylim([0, 2])
-plt.xlim([0.35, 2.2])
-plt.yticks(np.arange(0, 2.5, 0.5), minor=False)
-plt.savefig('plots/contour_plot.pdf')
+plt.xlim([0, 0.04])
+plt.ylim([0.25, 2.2])
+plt.savefig('plots/old_contour_plot.pdf')
 #################### End n-amp plot
 
 ####### Now compute uncertainty in n #######
 
-L_n = Likelihood.sum(axis=0)
+L_n = Likelihood.sum(axis=1)
 L_n = L_n/L_n.max()
 
 cumsum = np.cumsum(L_n)
