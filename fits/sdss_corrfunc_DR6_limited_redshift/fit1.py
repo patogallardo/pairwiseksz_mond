@@ -130,6 +130,23 @@ df_table = pd.DataFrame(data=[[fitted_g_chisq, pte_g],
 df_table.to_latex('table_ptes.tex',
                   escape=False, 
                   float_format="%1.2f")
+# write variables
+def convert_variable_to_latex_command(varname, value, decplaces=2):
+    s = "\\newcommand{\\%s}{%1.2f}" % (varname, value)
+    if decplaces == 1:
+        s = "\\newcommand{\\%s}{%1.1f}" % (varname, value)
+    if decplaces == 3:
+        s = "\\newcommand{\\%s}{%1.3f}" % (varname, value)
+    if decplaces == 0:
+        s = "\\newcommand{\\%s}{%i}" % (varname, value)
+    return s + "\n"
+string_out = ""
+string_out += convert_variable_to_latex_command("DOF", dof, 0)
+string_out += convert_variable_to_latex_command("LCDMCHISQ", fitted_g_chisq, 1)
+string_out += convert_variable_to_latex_command("MONDCHISQ", fitted_sqrt_g, 1)
+string_out += convert_variable_to_latex_command("LCDMPTE", pte_g)
+string_out += convert_variable_to_latex_command("MONDPTE", pte_sqrt_g)
+print(string_out)
 # End PTE computation
 
 # Make plot
@@ -182,3 +199,5 @@ plt.axhline(0, color='black')
 plt.xlabel(r'$r~[\mathrm{Mpc}]$')
 plt.ylabel(r'$\hat{p}_{\mathrm{kSZ}}~[\mathrm{\mu K}]$')
 plt.savefig('plots/pksz.pdf')
+
+print(df_table)

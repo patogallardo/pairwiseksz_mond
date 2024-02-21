@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 
 import pandas as pd
 import numpy as np
@@ -11,7 +11,7 @@ import os
 from scipy.interpolate import interp1d
 from progressbar import progressbar
 import seaborn as sns
-from common import fnames_curves as ksz_meas_fnames
+#from common import fnames_curves as ksz_meas_fnames
 
 np.random.seed(0)
 
@@ -40,7 +40,8 @@ df_covs = pd.read_csv(os.path.join(corr_fun_dir, covs_fname),
                       comment='#',
                       delim_whitespace='True',
                       names=range(72))
-df_ksz_meas = pd.read_csv(ksz_meas_fnames[0])[first_bin:last_bin]
+df_ksz_meas = pd.read_hdf('DR6_res/DR6_150GHz_C21cat_lum_gt_4p3e10_and_zgt0p44_and_zlt0p66.hdf',
+                          key='df_ksz_err')[first_bin:last_bin]
 
 xi_mean = df_corr_fun.xi.values
 r_mpc_corrfunc = df_corr_fun.R_Mpc.values
@@ -59,9 +60,9 @@ for j in range(NREALIZATIONS):
                          xi_realizations[j, :], 
                          kind="quadratic")
     plt.scatter(r_mpc_corrfunc, xi_realizations[j, :] * r_mpc_corrfunc**2,
-                alpha=1/NREALIZATIONS, marker='.', color='blue')
+                alpha=50/NREALIZATIONS, marker='.', color='blue')
     plt.plot(r_toshow, xi_interp(r_toshow) * r_toshow**2,
-             alpha=1/NREALIZATIONS, color='blue')
+             alpha=50/NREALIZATIONS, color='blue')
 
 if show:
     plt.show()
@@ -81,10 +82,12 @@ for realization in progressbar(range(NREALIZATIONS)):
                          kind="quadratic")
     for sample_int in range(NSAMPLES_INT):
         integrals[realization, sample_int] = quad(xi_r_sq, 6, r_integral[sample_int], args=(xi_interp))[0]
-gs = integrals/r_integral**2
-sqrt_gs = np.sqrt(integrals)/r_integral
+prefactor = 1/(1+xi_interp(r_integral))
+gs = integrals/r_integral**2 * prefactor
+sqrt_gs = np.sqrt(integrals * prefactor)/r_integral
 # resample to ksz measurement bins
-ksz_meas_rsep = df_ksz_meas.rsep.values
+ksz_meas_rsep = df_ksz_meas.r_mp.values
+#ksz_meas_rsep = df_ksz_meas.rsep.values
 g_sampled = np.zeros([NREALIZATIONS, len(ksz_meas_rsep)])
 sqrt_g_sampled = np.zeros([NREALIZATIONS, len(ksz_meas_rsep)])
 
@@ -98,13 +101,13 @@ for realization in range(NREALIZATIONS):
 # plot integrals g and sqrt(g)
 for j in range(NREALIZATIONS):
     plt.plot(r_integral, gs[j, :],
-             color='blue', alpha=1/NREALIZATIONS)
+             color='blue', alpha=50/NREALIZATIONS)
     plt.plot(r_integral, 2 * sqrt_gs[j, :],
-             color='C2', alpha=1/NREALIZATIONS)
+             color='C2', alpha=50/NREALIZATIONS)
     plt.scatter(ksz_meas_rsep, g_sampled[j, :],
-                color='blue', alpha=1/NREALIZATIONS, marker='.')
+                color='blue', alpha=50/NREALIZATIONS, marker='.')
     plt.scatter(ksz_meas_rsep, 2 * sqrt_g_sampled[j, :],
-                color='C2', alpha=1/NREALIZATIONS, marker='.')
+                color='C2', alpha=50/NREALIZATIONS, marker='.')
 plt.plot([], [], color='blue', label='$g$')
 plt.plot([], [], color='C2', label= "$2 \\times \\sqrt{g}$")
 plt.legend()

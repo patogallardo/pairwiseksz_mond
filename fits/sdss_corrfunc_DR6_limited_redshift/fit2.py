@@ -176,7 +176,7 @@ plt.text(0.52, 0.03,
          color=cs[1])
 plt.ylim([0, 2])
 plt.xlim([0.35, 2.2])
-plt.yticks(np.arange(0, 2.5, 0.5), minor=False)
+plt.yticks(np.arange(0, 2.5, 0.5))
 plt.savefig('plots/contour_plot.pdf')
 #################### End n-amp plot
 
@@ -198,3 +198,19 @@ print("Best fit n: %1.3f" % res['exp'])
 print("sigma_n=%1.3f" % sigma_n)
 dist = (res['exp'] - 0.5)/sigma_n
 print("(n_ML-0.5)/sigma= %1.3f" % dist)
+
+# make output for latex
+def convert_variable_to_latex_command(varname, value, decplaces=2):
+    s = "\\newcommand{\\%s}{%1.2f}" % (varname, value)
+    if decplaces == 1:
+        s = "\\newcommand{\\%s}{%1.1f}" % (varname, value)
+    if decplaces == 3:
+        s = "\\newcommand{\\%s}{%1.3f}" % (varname, value)
+    if decplaces == 0:
+        s = "\\newcommand{\\%s}{%i}" % (varname, value)
+    return s + "\n"
+string_out = ""
+string_out += convert_variable_to_latex_command("BESTFITN", res["exp"], 2)
+string_out += convert_variable_to_latex_command("SIGMAN", sigma_n, 2)
+string_out += convert_variable_to_latex_command("NSIGMA", dist, 1)
+print(string_out)
