@@ -34,8 +34,8 @@ def get_max_lik_fit(r, p, inv_cov, f):
 
 corr_fun_fname = "Ross_2016_COMBINEDDR12_zbin%i_correlation_function_monopole_post_recon_bincent%i.dat" % (zbin, bincent)
 corr_fun_dir = "Ross_2016_COMBINEDDR12"
-obsdir_150 = '../../ACT_kSZ_paper/pairwise_ksz_jk_results/202012_S18_coadd_150GHz/results_bsdt/csv/'
-obsdir_090 = '../../ACT_kSZ_paper/pairwise_ksz_jk_results/202012_S18_coadd_098GHz/results_bsdt/csv/'
+obsdir_150 = './C21_data/'
+obsdir_090 = './C21_data/'
 obs_fnames = {"L61_150": obsdir_150 + "S18_coadd_150GHz_V20DR15_V3_lum_gt_06p1_bs_dt_ksz_curve_and_errorbars.csv",
               "L43_150": obsdir_150 + "S18_coadd_150GHz_V20DR15_V3_lum_gt_04p3_bs_dt_ksz_curve_and_errorbars.csv",
               "L61_090": obsdir_090 + "S18_coadd_090GHz_V20DR15_V3_lum_gt_06p1_bs_dt_ksz_curve_and_errorbars.csv",
@@ -46,7 +46,8 @@ obs_fname = obs_fnames[obs_name]
 df_corr_fun = pd.read_csv(corr_fun_dir + '/' + corr_fun_fname, delim_whitespace=True, skiprows=3,
                           names=["R_ov_h", "xi", "err_xi"])
 df_corr_fun["R_Mpc"] = df_corr_fun.R_ov_h/h
-df_curve = pd.read_csv(obs_fname)[first_bin:last_bin]
+
+rsep = np.array([  5. ,  15. ,  25. ,  35. ,  45. ,  55. ,  65. ,  75. ,  85. , 95. , 105. , 115. , 125. , 135. , 145. , 175. , 225. , 282.5, 355. ])[first_bin:last_bin]
 
 # compute integrals
 xi_interp = interp1d(df_corr_fun.R_Mpc,
@@ -61,15 +62,14 @@ for j in range(len(r)):
 # end compute integrals
 
 # interpolate g
-g = interp1d(r, I/r**2, kind='cubic',
+g = interp1d(r, 1/(1+xi_interp(r)) * I/r**2, kind='cubic',
              bounds_error=False,
              fill_value='extrapolate' ) # do it up to 17th bin
-sqrt_g = interp1d(r, np.sqrt(I)/r, kind='cubic',
+sqrt_g = interp1d(r, np.sqrt(g(r)), kind='cubic',
                   bounds_error=False,
                   fill_value='extrapolate')
 # end interpolation
 
-rsep = df_curve.rsep
 
 # make figure
 
@@ -83,7 +83,7 @@ plt.legend()
 if show:
     plt.show()
 else:
-    plt.savefig('plots/sdss_ksz_prediction.pdf')
+    plt.savefig('plots/diagnosticplot_sdss_ksz_prediction.pdf')
     plt.close()
 
 df_out = pd.DataFrame({'rsep': rsep, 
