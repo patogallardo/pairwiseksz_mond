@@ -162,7 +162,7 @@ levels = np.exp(-np.arange(3, -1, -1)**2/2)
 plt.contour(exp_mat, amp_mat/amplitude_normalization, Likelihood,
             levels=levels,
             colors='black')
-plt.ylabel(r'$\mathrm{ \tau/\tau_{\Lambda CDM}}$')
+plt.ylabel(r'$\mathrm{ \bar \tau/\bar \tau_{\Lambda CDM}}$')
 plt.xlabel(r'$\mathrm{Force~Law~Index,~}n$')
 plt.scatter(res['exp'], res['amp']/amplitude_normalization,
             label='ML', color='black', marker='X')
