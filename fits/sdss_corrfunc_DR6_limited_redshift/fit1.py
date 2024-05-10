@@ -50,7 +50,7 @@ C_sqrt_g = np.loadtxt(sdss_cov_sqrtg_fname)
 
 obsdir_150 = './DR6_res/'
 
-obs_fnames = {"L43_150_REST_Z": obsdir_150 + "DR6_150GHz_C21cat_lum_gt_4p3e10_and_zgt0p44_and_zlt0p66.hdf"}
+obs_fnames = {"L43_150_REST_Z": obsdir_150 + "DR6v4_simple_v1_coadd_150GHz_mond_lum_gt_4p3e10_and_zgt0p44_and_zlt0p66_step_10mpc.hdf"}
 obs_fname = obs_fnames[obs_name]
 
 df_pw_obs_curve = pd.read_hdf(obs_fname, 'df_ksz_err')[first_bin:last_bin]
@@ -139,13 +139,17 @@ def convert_variable_to_latex_command(varname, value, decplaces=2):
         s = "\\newcommand{\\%s}{%1.3f}" % (varname, value)
     if decplaces == 0:
         s = "\\newcommand{\\%s}{%i}" % (varname, value)
+    if decplaces == "sci":
+        string_value = "%1.2e}$" % value
+        string_value = string_value.replace("e-0", '$\\times 10^{-')
+        s = "\\newcommand{\\%s}{%s}" % (varname, string_value)
     return s + "\n"
 string_out = ""
 string_out += convert_variable_to_latex_command("DOF", dof, 0)
 string_out += convert_variable_to_latex_command("LCDMCHISQ", fitted_g_chisq, 1)
 string_out += convert_variable_to_latex_command("MONDCHISQ", fitted_sqrt_g, 1)
 string_out += convert_variable_to_latex_command("LCDMPTE", pte_g)
-string_out += convert_variable_to_latex_command("MONDPTE", pte_sqrt_g)
+string_out += convert_variable_to_latex_command("MONDPTE", pte_sqrt_g, decplaces='sci')
 print(string_out)
 # End PTE computation
 

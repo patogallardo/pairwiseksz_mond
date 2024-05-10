@@ -64,7 +64,7 @@ corr_fun_fname = "Ross_2016_COMBINEDDR12_zbin%i_correlation_function_monopole_po
 corr_fun_dir = "Ross_2016_COMBINEDDR12"
 obsdir_150 = './DR6_res/'
 obsdir_090 = './DR6_res/'
-obs_fnames = {"L43_150_REST_Z": obsdir_150 + "DR6_150GHz_C21cat_lum_gt_4p3e10_and_zgt0p44_and_zlt0p66.hdf"}
+obs_fnames = {"L43_150_REST_Z": obsdir_150 + "DR6v4_simple_v1_coadd_150GHz_mond_lum_gt_4p3e10_and_zgt0p44_and_zlt0p66_step_10mpc.hdf"}
 obs_fname = obs_fnames[obs_name]
 # end filename config
 
