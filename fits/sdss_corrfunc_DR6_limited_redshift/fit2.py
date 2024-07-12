@@ -22,7 +22,7 @@ sns.set_palette('colorblind')
 figparams = {
     'text.latex.preamble': r'\usepackage{amsmath} \boldmath',
     'text.usetex': True,
-    'axes.labelsize': 16.,
+    'axes.labelsize': 14.,
     'xtick.labelsize': 10,
     'ytick.labelsize': 10,
     'figure.figsize': [10., 8.],
@@ -87,7 +87,8 @@ for j in range(len(r)):
 # end compute integrals
 
 # interpolate g
-pow_g = interp1d(r, np.power(I/r**2, 0.5),
+# EXPONENT
+pow_g = interp1d(r, np.power(I/r**2, 1/2),
                  kind='cubic',
                  bounds_error=False,
                  fill_value='extrapolate')
@@ -96,9 +97,10 @@ pow_g = interp1d(r, np.power(I/r**2, 0.5),
 rsep = df_curve.r_mp.values
 
 
+#EXPONENET
 def amp_exponent_function_tofit(amplitude, exponent,
                                 rsep, I):
-    f_pow_g = interp1d(r, np.power(I/r**2, exponent),
+    f_pow_g = interp1d(r, np.power(I/r**2, exponent/2),
                        kind='cubic',
                        bounds_error=False,
                        fill_value='extrapolate')
@@ -130,10 +132,10 @@ def chisq(amp_exp,
 
 
 # Plot contours
-N_samples_exp = 200
-N_samples_amp = 300
+N_samples_exp = 500
+N_samples_amp = 500
 amp_range = [0.0, 0.04]
-exp_range = [0.1, 4.00]
+exp_range = [0.01, 12.00]
 
 amps = np.linspace(amp_range[0], amp_range[1], N_samples_amp)
 exps = np.linspace(exp_range[0], exp_range[1], N_samples_exp)
@@ -166,24 +168,32 @@ plt.ylabel(r'$\mathrm{ \bar \tau/\bar \tau_{\Lambda CDM}}$')
 plt.xlabel(r'$\mathrm{Force~Law~Index,~}n$')
 plt.scatter(res['exp'], res['amp']/amplitude_normalization,
             label='ML', color='black', marker='X')
-plt.axvline(1, color=cs[0], alpha=0.5, ls='dashed')
-plt.text(1.01, 0.03,
+plt.axvline(2, color=cs[0], alpha=0.5, ls='dashed')
+plt.text(2.01, 0.03,
          r'$\Lambda\mathrm{CDM}$',
          color=cs[0])
-plt.axvline(0.5, color=cs[1], alpha=0.5, ls='dashed')
-plt.text(0.52, 0.03,
+plt.axvline(1, color=cs[1], alpha=0.5, ls='dashed')
+plt.text(1.01, 0.03,
          r'$\mathrm{MOND}$',
          color=cs[1])
 plt.ylim([0, 2])
-plt.xlim([0.35, 2.2])
-plt.yticks(np.arange(0, 2.5, 0.5))
+plt.xlim([0.80, 4.0])
+plt.yticks(np.arange(0, 2.5, 1.0))
 plt.savefig('plots/contour_plot.pdf')
 #################### End n-amp plot
 
-####### Now compute uncertainty in n #######
+
 
 L_n = Likelihood.sum(axis=0)
 L_n = L_n/L_n.max()
+
+# get median of likelihood
+
+# end median of likelihood
+
+
+####### Now compute uncertainty in n #######
+
 
 cumsum = np.cumsum(L_n)
 cumsum = cumsum/cumsum.max()
@@ -196,8 +206,8 @@ upper_exp = exps[sel][-1]
 sigma_n = 0.5 * (upper_exp - lower_exp)
 print("Best fit n: %1.3f" % res['exp'])
 print("sigma_n=%1.3f" % sigma_n)
-dist = (res['exp'] - 0.5)/sigma_n
-print("(n_ML-0.5)/sigma= %1.3f" % dist)
+dist = (res['exp'] - 1.0)/sigma_n
+print("(n_ML-1.0)/sigma= %1.3f" % dist)
 
 # make output for latex
 def convert_variable_to_latex_command(varname, value, decplaces=2):
@@ -213,4 +223,17 @@ string_out = ""
 string_out += convert_variable_to_latex_command("BESTFITN", res["exp"], 2)
 string_out += convert_variable_to_latex_command("SIGMAN", sigma_n, 2)
 string_out += convert_variable_to_latex_command("NSIGMA", dist, 1)
+
+# compute the 95% interval
+lowerlimit = 0.5-0.95/2
+upperlimit = 0.5+0.95/2
+sel = np.logical_and(cumsum>lowerlimit, cumsum<upperlimit)
+lower_exp = exps[sel][0]
+upper_exp = exps[sel][-1]
+sigma_n95 = 0.5 * (upper_exp - lower_exp)
+string_out += convert_variable_to_latex_command("NLOWERBOUNDNINETYFIVEPCT", res["exp"]-sigma_n95, 2)
+
+print("delta95pct_n=%1.3f" % sigma_n95)
+print("n> %1.3f" %(res['exp']-sigma_n95))
+
 print(string_out)
