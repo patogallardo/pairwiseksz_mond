@@ -36,7 +36,8 @@ show = False
 
 first_bin, last_bin = 2, 17
 show = False
-h = 0.6736  # planck PR3 2018
+h = 0.6736  # planck PR3 2018 https://arxiv.org/abs/1807.06209
+
 
 zbin = 2
 bincent = 0
@@ -98,14 +99,21 @@ pow_g = interp1d(r, np.power(I/r**2, 1/2),
 rsep = df_curve.r_mp.values
 
 
-#EXPONENET
+#Prefactor and exponent
+c = 2.998e+8 # meters per second
 G = 6.67e-11 #(Newtons m^2/kg^2)
-rho_b = 0.0224/h**2 # barion density
-critical_density = 3*(100*h*3.241e-20)**2/(8*3.14*G) # kg/m^3
-a0 = 1e-10
-prefactor = 4*np.pi * G * rho_b*critical_density/a0 # in units of 1/meter
-prefactor = prefactor / 3.24078e-23 # in units of 1/Mpc
+Omega_b = 0.0224/h**2 # Omega barion
+Omega_c = 0.120/h**2 #
 
+critical_density = 3*(100*h*3.241e-20)**2/(8*3.14*G) # kg/m^3
+
+#rho_c = Omega_c * critical_density
+rho_b = Omega_b * critical_density
+a_bar = c * np.sqrt(G * critical_density)#insert formula here
+prefactor = 4*np.pi * G * rho_b/a_bar # in units of 1/meter
+prefactor = prefactor / 3.24078e-23 # in units of 1/Mpc https://www.wolframalpha.com/input?i=1+meter+in+Mpc
+prefactor = 1.0
+#end prefactor calculations
 
 def amp_exponent_function_tofit(amplitude, exponent,
                                 rsep, I):
@@ -143,7 +151,7 @@ def chisq(amp_exp,
 # Plot contours
 N_samples_exp = 500
 N_samples_amp = 500
-amp_range = [0.0, 5]
+amp_range = [0.0, 0.05]
 exp_range = [0.01, 6.00]
 
 amps = np.linspace(amp_range[0], amp_range[1], N_samples_amp)
@@ -186,10 +194,10 @@ plt.text(1.01, 0.03,
          r'$\mathrm{MOND}$',
          color=cs[1])
 plt.ylim([0, amp_range[1]/amplitude_normalization])
-plt.ylim([0, 2])
 plt.xlim([0.80, 4.0])
 #plt.yticks(np.arange(0, 2.5, 1.0))
-plt.savefig('plots/contour_plot.pdf')
+plt.savefig('plots/contour_plot_unity_prefactor.pdf')
+plt.close()
 #################### End n-amp plot
 
 
