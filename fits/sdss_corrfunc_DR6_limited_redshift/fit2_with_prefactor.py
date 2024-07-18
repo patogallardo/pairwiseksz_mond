@@ -105,6 +105,8 @@ critical_density = 3*(100*h*3.241e-20)**2/(8*3.14*G) # kg/m^3
 a0 = 1e-10
 prefactor = 4*np.pi * G * rho_b*critical_density/a0 # in units of 1/meter
 prefactor = prefactor / 3.24078e-23 # in units of 1/Mpc
+
+
 def amp_exponent_function_tofit(amplitude, exponent,
                                 rsep, I):
     f_pow_g = interp1d(r, np.power(I/r**2, exponent/2),
@@ -184,6 +186,7 @@ plt.text(1.01, 0.03,
          r'$\mathrm{MOND}$',
          color=cs[1])
 plt.ylim([0, amp_range[1]/amplitude_normalization])
+plt.ylim([0, 2])
 plt.xlim([0.80, 4.0])
 #plt.yticks(np.arange(0, 2.5, 1.0))
 plt.savefig('plots/contour_plot.pdf')
