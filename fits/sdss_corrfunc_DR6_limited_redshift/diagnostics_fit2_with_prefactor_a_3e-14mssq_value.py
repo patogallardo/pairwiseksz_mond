@@ -30,13 +30,14 @@ figparams = {
     'legend.fontsize': 18}
 plt.rcParams.update(figparams)
 cs = plt.rcParams['axes.prop_cycle'].by_key()['color']
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 show = False
 # End plot config
 
 first_bin, last_bin = 2, 17
 show = False
-h = 0.6736  # planck PR3 2018
+h = 0.6736  # planck PR3 2018 https://arxiv.org/abs/1807.06209
+
 
 zbin = 2
 bincent = 0
@@ -50,9 +51,10 @@ def xi_r_sq(r, xi_interp):
 def get_max_lik_fit(r, p, cov, amp_exponent_function_tofit):
     '''Received observed r, p inv_cov and a function to fit, fits the amplitude
     and returns it.'''
-    x0 = np.array([1/15, 0.8])
+    x0 = np.array([1/15, 1.2])
     opt = optimize.minimize(chisq, x0,
-                            args=(r, p, amp_exponent_function_tofit, C_pw, cov))
+                            args=(r, p, amp_exponent_function_tofit, C_pw, cov),
+                            method='Nelder-Mead')
     amp, exp = opt.x[0], opt.x[1]
     res = {'amp': amp,
            'exp': exp}
@@ -97,14 +99,29 @@ pow_g = interp1d(r, np.power(I/r**2, 1/2),
 rsep = df_curve.r_mp.values
 
 
-#EXPONENET
+#Prefactor and exponent
+c = 2.998e+8 # meters per second
+G = 6.67e-11 #(Newtons m^2/kg^2)
+Omega_b = 0.0224/h**2 # Omega barion
+Omega_c = 0.120/h**2 #
+
+critical_density = 3*(100*h*3.241e-20)**2/(8*3.14*G) # kg/m^3
+
+#rho_c = Omega_c * critical_density
+rho_b = Omega_b * critical_density
+#a_bar = c * np.sqrt(G * critical_density)#insert formula here
+a_bar = 3e-14 #ms^-2
+prefactor = 4*np.pi * G * rho_b/a_bar # in units of 1/meter
+prefactor = prefactor / 3.24078e-23 # in units of 1/Mpc https://www.wolframalpha.com/input?i=1+meter+in+Mpc
+#end prefactor calculations
+
 def amp_exponent_function_tofit(amplitude, exponent,
                                 rsep, I):
     f_pow_g = interp1d(r, np.power(I/r**2, exponent/2),
                        kind='cubic',
                        bounds_error=False,
                        fill_value='extrapolate')
-    g_exp_power_times_A = -1.0 * amplitude * f_pow_g(rsep)
+    g_exp_power_times_A = -1.0 * amplitude * f_pow_g(rsep) * prefactor**(exponent/2)/prefactor
     return g_exp_power_times_A
 
 
@@ -134,8 +151,8 @@ def chisq(amp_exp,
 # Plot contours
 N_samples_exp = 500
 N_samples_amp = 500
-amp_range = [0.0, 0.04]
-exp_range = [0.01, 12.00]
+amp_range = [0.0, 0.05]
+exp_range = [0.01, 6.00]
 
 amps = np.linspace(amp_range[0], amp_range[1], N_samples_amp)
 exps = np.linspace(exp_range[0], exp_range[1], N_samples_exp)
@@ -176,21 +193,17 @@ plt.axvline(1, color=cs[1], alpha=0.5, ls='dashed')
 plt.text(1.01, 0.03,
          r'$\mathrm{MOND}$',
          color=cs[1])
-plt.ylim([0, 2])
+plt.ylim([0, amp_range[1]/amplitude_normalization])
 plt.xlim([0.80, 4.0])
-plt.yticks(np.arange(0, 2.5, 1.0))
-plt.savefig('plots/contour_plot.pdf')
+#plt.yticks(np.arange(0, 2.5, 1.0))
+plt.savefig('plots/contour_plot_a_bar_3e-14mssq_prefactor.pdf')
+plt.close()
 #################### End n-amp plot
 
 
 
 L_n = Likelihood.sum(axis=0)
 L_n = L_n/L_n.max()
-
-# get median of likelihood
-
-# end median of likelihood
-
 
 ####### Now compute uncertainty in n #######
 
@@ -201,16 +214,19 @@ cumsum = cumsum/cumsum.max()
 lowerlimit = 0.5-0.68/2
 upperlimit = 0.5+0.68/2
 sel = np.logical_and(cumsum>lowerlimit, cumsum<upperlimit)
+sel_median = cumsum > 0.5
 lower_exp = exps[sel][0]
 upper_exp = exps[sel][-1]
-sigma_n = 0.5 * (upper_exp - lower_exp)
-print("Best fit n: %1.3f" % res['exp'])
-print("sigma_n=%1.3f" % sigma_n)
-dist = (res['exp'] - 1.0)/sigma_n
-print("(n_ML-1.0)/sigma= %1.3f" % dist)
+median = exps[sel_median][0]
 
-dist_lcdm = (res['exp'] - 2.0)/sigma_n
-print("(n_ML-2.0)/sigma= %1.3f" % dist_lcdm)
+
+
+sigma_n = 0.5 * (upper_exp - lower_exp)
+print("Marginalized Median n: %1.3f" % median)
+print("sigma_n=%1.3f" % sigma_n)
+dist = (median - 1.0)/sigma_n
+print("(marginalized median - 1.0)/sigma= %1.3f" % dist)
+
 # make output for latex
 def convert_variable_to_latex_command(varname, value, decplaces=2):
     s = "\\newcommand{\\%s}{%1.2f}" % (varname, value)
@@ -222,10 +238,14 @@ def convert_variable_to_latex_command(varname, value, decplaces=2):
         s = "\\newcommand{\\%s}{%i}" % (varname, value)
     return s + "\n"
 string_out = ""
-string_out += convert_variable_to_latex_command("BESTFITN", res["exp"], 1)
-string_out += convert_variable_to_latex_command("SIGMAN", sigma_n, 1)
-string_out += convert_variable_to_latex_command("NSIGMAMOND", dist, 1)
-string_out += convert_variable_to_latex_command("NSIGMALCDM", dist_lcdm, 1)
+string_out += convert_variable_to_latex_command("MARGMEDIAN", median, 2)
+string_out += convert_variable_to_latex_command("SIGMAN", sigma_n, 2)
+string_out += convert_variable_to_latex_command("NSIGMA", dist, 1)
+
+string_out += convert_variable_to_latex_command("MARGMEDIANONEDEC", median, 1)
+string_out += convert_variable_to_latex_command("SIGMANONEDEC", sigma_n, 1)
+string_out += convert_variable_to_latex_command("NSIGMAONEDEC", dist, 1)
+
 
 # compute the 95% interval
 lowerlimit = 0.5-0.95/2
@@ -234,9 +254,11 @@ sel = np.logical_and(cumsum>lowerlimit, cumsum<upperlimit)
 lower_exp = exps[sel][0]
 upper_exp = exps[sel][-1]
 sigma_n95 = 0.5 * (upper_exp - lower_exp)
-string_out += convert_variable_to_latex_command("NLOWERBOUNDNINETYFIVEPCT", res["exp"]-sigma_n95, 1)
+string_out += convert_variable_to_latex_command("NLOWERBOUNDNINETYFIVEPCT", median-sigma_n95, 2)
+string_out += convert_variable_to_latex_command("NLOWERBOUNDNINETYFIVEPCTONEDEC", median-sigma_n95, 1)
+
 
 print("delta95pct_n=%1.3f" % sigma_n95)
-print("n> %1.3f" %(res['exp']-sigma_n95))
+print("n> %1.3f" %(median-sigma_n95))
 
 print(string_out)
