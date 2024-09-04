@@ -157,26 +157,26 @@ print(string_out)
 f, ax = plt.subplots(constrained_layout=True, figsize=[5, 3])
 plt.rcParams.update({'font.size': 12})
 
-plt.errorbar(rsep, p_pw,
+fig_er = plt.errorbar(rsep, p_pw,
              yerr=np.sqrt(np.diag(C_pw)),
              marker='o', ls='', color='black',
              label=r'$\mathrm{Measured~Pairwise~SZ}$')
 
-plt.fill_between(rsep,
+fig_lcdm_fill = plt.fill_between(rsep,
                  y1=p_sdss_g * (fitted_g + sigma_g),
                  y2=p_sdss_g * (fitted_g - sigma_g),
                  color=cs[0], alpha=0.2,
                  label=r'$\Lambda \mathrm{CDM}$')
 
-plt.plot(rsep, p_sdss_g * fitted_g, color=cs[0])
+fig_lcdm_line = plt.plot(rsep, p_sdss_g * fitted_g, color=cs[0])
 
-plt.fill_between(rsep,
+fig_mond_fill = plt.fill_between(rsep,
                  y1=p_sdss_sqrt_g * (fitted_sqrt + sigma_sqrt_g),
                  y2=p_sdss_sqrt_g * (fitted_sqrt - sigma_sqrt_g),
                  color=cs[1], alpha=0.2,
                  label=r'$\mathrm{MOND}$')
 
-plt.plot(rsep, p_sdss_sqrt_g * fitted_sqrt,
+fig_mond_line = plt.plot(rsep, p_sdss_sqrt_g * fitted_sqrt,
          color=cs[1])
 
 # plot C21 data
@@ -189,16 +189,19 @@ df = pd.read_csv(fname, delim_whitespace=True,
                  names=['id1', 'id2', 'r', 'p'])
 r = df.r.values[firstbin:]
 p = df.p.values[firstbin:]
-plt.plot(r, -p * T_cmb_over_c * tau,
-         ls='--', label=r'$\Lambda\mathrm{CDM~best{-}fit~(Calafut~et~al.~2021)}$', color='black')
+fig_c21 = plt.plot(r, -p * T_cmb_over_c * tau,
+                   ls='--', label=r'$\Lambda\mathrm{CDM~best{-}fit~(Calafut~et~al.~2021)}$', color='black')
 plt.xlim([0, 250])
 
 ax.xaxis.set_minor_locator(MultipleLocator(10))
 ax.yaxis.set_minor_locator(MultipleLocator(0.005))
 handles, labels = plt.gca().get_legend_handles_labels()
 order = [3, 1, 2, 0]
-plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order],
-           fontsize=8)
+#plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order],
+#           fontsize=8)
+plt.legend([fig_er,(fig_mond_fill, fig_mond_line[0]), fig_c21[0], (fig_lcdm_fill, fig_lcdm_line[0])], 
+           [fig_er.get_label(), fig_mond_fill.get_label(), fig_c21[0].get_label(), fig_lcdm_fill.get_label()],
+            fontsize=8 )
 plt.axhline(0, color='black')
 plt.xlabel(r'$r~[\mathrm{Mpc}]$')
 plt.ylabel(r'$\hat{p}_{\mathrm{kSZ}}~[\mathrm{\mu K}]$')
