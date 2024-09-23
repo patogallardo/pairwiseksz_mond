@@ -8,8 +8,8 @@ def forecast_SNR(snr_current, noise_current, ngal_current, noise_forecast, ngal_
     return snr_current * noise_current/noise_forecast * np.sqrt(ngal_forecast/ngal_current)
 
 Ngal_forecast = 4000000
-noise_ukarcmin_forecast = 6 # SO forecast
-noise_ukarcmin_forecast = 14 # SO forecast
+#noise_ukarcmin_forecast = 6 # SO forecast
+noise_ukarcmin_forecast = 14 # SO forecast NO map noise dependence
 
 forecasted = forecast_SNR(SNR_CURRENT, NOISE_ukarcmin_CURRENT, NGAL_CURRENT,
                           noise_ukarcmin_forecast, Ngal_forecast)
